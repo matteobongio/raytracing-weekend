@@ -1,6 +1,6 @@
-use std::{fmt::Display, io::Write};
-use crate::write_color::WriteColor;
 use crate::definitions::Color3;
+use crate::write_color::WriteColor;
+use std::{fmt::Display, io::Write};
 
 pub struct Pixel<T: Display> {
     red: T,
@@ -23,7 +23,11 @@ impl<T: Display> Pixel<T> {
 
 impl From<Color3<f64>> for Pixel<u8> {
     fn from(value: Color3<f64>) -> Self {
-        Self { red: (value.x * 255.999) as u8, green: (value.y * 255.999) as u8, blue: (value.z * 255.999) as u8 }
+        Self {
+            red: (value.x * 255.999) as u8,
+            green: (value.y * 255.999) as u8,
+            blue: (value.z * 255.999) as u8,
+        }
     }
 }
 

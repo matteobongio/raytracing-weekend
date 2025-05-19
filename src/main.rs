@@ -1,8 +1,8 @@
+pub mod camera;
 pub mod definitions;
-pub mod write_color;
 pub mod ppm;
 pub mod ray;
-pub mod camera;
+pub mod write_color;
 use camera::Camera;
 use definitions::Color3;
 use nalgebra::Vector3;
@@ -10,10 +10,22 @@ use ppm::{Image, Pixel};
 use ray::Ray;
 use std::io;
 
-fn color_ray(r: &Ray<f64>) -> Color3<f64>{
+fn hit_sphere(center: Vector3<f64>, radius: f64, ray: &Ray<f64>) -> bool {
+    let oc = center - ray.origin();
+    let a = ray.direction().dot(ray.direction());
+    let b = -2.0 * ray.direction().dot(&oc);
+    let c = oc.dot(&oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant >= 0.0
+}
+
+fn color_ray(r: &Ray<f64>) -> Color3<f64> {
+    if hit_sphere(Vector3::new(0.0, 0.0, -1.0), 0.5, r) {
+        return Color3::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = r.direction().normalize();
-    let a = 0.5*(unit_direction.y + 1.0);
-    (1.0-a)*Color3::new(1.0, 1.0, 1.0) + a*Color3::new(0.5, 0.7, 1.0)
+    let a = 0.5 * (unit_direction.y + 1.0);
+    (1.0 - a) * Color3::new(1.0, 1.0, 1.0) + a * Color3::new(0.5, 0.7, 1.0)
 }
 
 struct Scene {
@@ -36,7 +48,8 @@ fn main() {
         eprintln!("scanlines remaining: {}\n", image_height - j);
         let mut row = Vec::new();
         for i in 0..image_width {
-            let pixel_center = pixel00_loc + pixel_delta_u.scale(i as f64) + pixel_delta_v.scale(j as f64);
+            let pixel_center =
+                pixel00_loc + pixel_delta_u.scale(i as f64) + pixel_delta_v.scale(j as f64);
             let ray_dir = pixel_center - camera_center;
             let ray = Ray::new(camera_center, ray_dir);
             let color = color_ray(&ray);
@@ -44,7 +57,6 @@ fn main() {
         }
         image.push(row);
     }
-
 
     // let mut file = File::create("out.ppm").unwrap();
     let mut stdout = io::stdout().lock();

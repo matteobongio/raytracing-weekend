@@ -22,12 +22,12 @@ impl Camera {
         viewport_height: f64,
         camera_center: Vector3<f64>,
     ) -> Self {
-        let aspect_ratio = image_width as f64/ image_height as f64;
+        let aspect_ratio = image_width as f64 / image_height as f64;
         let viewport_width = viewport_height * aspect_ratio;
-        let viewport_u= Vector3::new(viewport_width, 0.0, 0.0);
-        let viewport_v= Vector3::new(0.0, - viewport_height, 0.0);
-        let pixel_delta_u = viewport_u.scale(1.0/ image_width as f64);
-        let pixel_delta_v = viewport_v.scale(1.0/ image_width as f64);
+        let viewport_u = Vector3::new(viewport_width, 0.0, 0.0);
+        let viewport_v = Vector3::new(0.0, -viewport_height, 0.0);
+        let pixel_delta_u = viewport_u.scale(1.0 / image_width as f64);
+        let pixel_delta_v = viewport_v.scale(1.0 / image_width as f64);
         Self {
             image_width,
             image_height,
@@ -55,7 +55,10 @@ impl Camera {
         self.image_width
     }
     pub fn get_viewport_upper_left(&self) -> Vector3<f64> {
-        self.camera_center - Vector3::new(0.0, 0.0, self.focal_length) - self.viewport_u.scale(0.5) - self.viewport_v.scale(0.5)
+        self.camera_center
+            - Vector3::new(0.0, 0.0, self.focal_length)
+            - self.viewport_u.scale(0.5)
+            - self.viewport_v.scale(0.5)
     }
     pub fn get_pixel00_loc(&self) -> Vector3<f64> {
         self.get_viewport_upper_left() + 0.5 * (self.pixel_delta_u + self.pixel_delta_v)
