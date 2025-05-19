@@ -12,12 +12,12 @@ use std::io;
 
 fn hit_sphere(center: Vector3<f64>, radius: f64, ray: &Ray<f64>) -> f64 {
     let oc = center - ray.origin();
-    let a = ray.direction().dot(ray.direction());
-    let b = -2.0 * ray.direction().dot(&oc);
+    let a = ray.direction().norm_squared();
+    let h = ray.direction().dot(&oc);
     let c = oc.dot(&oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
+    let discriminant = h * h - a * c;
     if discriminant >= 0.0 {
-        return (-b - discriminant.sqrt()) / (2.0 * a);
+        return (h - discriminant.sqrt()) / a;
     }
     -1.0
 }
@@ -28,7 +28,6 @@ fn color_ray(r: &Ray<f64>) -> Color3<f64> {
     if hit > 0.0 {
         let normal = (r.at(hit) - Vector3::new(0.0, 0.0, -1.0)).normalize();
         return normal.add_scalar(1.0).scale(0.5);
-
     }
     let unit_direction = r.direction().normalize();
     let a = 0.5 * (unit_direction.y + 1.0);
