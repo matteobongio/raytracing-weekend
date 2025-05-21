@@ -1,22 +1,25 @@
-use approx::assert_relative_eq;
-use nalgebra::Vector3;
-
+use crate::interval::Interval;
 use crate::ray::Ray;
+use nalgebra::Vector3;
 
 pub struct HitRecord {
     pub point: Vector3<f64>,
     pub normal: Vector3<f64>,
     pub t: f64,
-    pub front_face: bool
+    pub front_face: bool,
 }
 
 impl HitRecord {
     pub fn new(point: Vector3<f64>, outward_normal: Vector3<f64>, t: f64, ray: &Ray<f64>) -> Self {
         let (front_face, normal) = Self::set_face_normal(&ray, &outward_normal);
-        Self { point, normal, t, front_face }
-
+        Self {
+            point,
+            normal,
+            t,
+            front_face,
+        }
     }
-    fn set_face_normal(ray: &Ray<f64>, outward_normal: &Vector3<f64>) ->(bool, Vector3<f64>) {
+    fn set_face_normal(ray: &Ray<f64>, outward_normal: &Vector3<f64>) -> (bool, Vector3<f64>) {
         // outward_normal should be a unit vector
         // assert_relative_eq!(outward_normal.magnitude(), 1.0);
         let front_face = ray.direction().dot(outward_normal) < 0.0;
@@ -32,9 +35,8 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray<f64>, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray<f64>, interval: Interval) -> Option<HitRecord>;
 }
-
 
 pub struct HittableList(pub Vec<Box<dyn Hittable>>);
 
@@ -42,13 +44,13 @@ impl HittableList {
     pub fn new() -> Self {
         return Self(Vec::new());
     }
-    
-    pub fn hit(&self, ray: &Ray<f64>, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+
+    pub fn hit(&self, ray: &Ray<f64>, interval: Interval) -> Option<HitRecord> {
         let mut output = None;
-        let mut closest_so_far = ray_tmax;
+        let mut closest_so_far = interval.max;
 
         for hittable in &self.0 {
-            if let Some(hit) =  hittable.hit(ray, ray_tmin, closest_so_far) {
+            if let Some(hit) = hittable.hit(ray, Interval::new(interval.min, closest_so_far)) {
                 closest_so_far = hit.t;
                 output = Some(hit);
             }
@@ -56,11 +58,6 @@ impl HittableList {
         output
     }
 }
-
-
-
-
-
 
 pub struct Sphere {
     center: Vector3<f64>,
@@ -77,7 +74,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray<f64>, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray<f64>, interval: Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.direction().norm_squared();
         let h = ray.direction().dot(&oc);
@@ -89,9 +86,9 @@ impl Hittable for Sphere {
 
         //find closest root in range
         let mut root = (h - discriminant.sqrt()) / a;
-        if root < ray_tmin || root > ray_tmax {
+        if !interval.contains(root) {
             root = (h + discriminant.sqrt()) / a;
-            if root < ray_tmin || root > ray_tmax {
+            if !interval.contains(root) {
                 return None;
             }
         }
@@ -101,6 +98,4 @@ impl Hittable for Sphere {
         let hr = HitRecord::new(point, normal, t, ray);
         Some(hr)
     }
-
-
 }

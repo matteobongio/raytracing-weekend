@@ -1,4 +1,5 @@
 pub mod camera;
+pub mod interval;
 pub mod definitions;
 pub mod ppm;
 pub mod ray;
@@ -6,6 +7,7 @@ pub mod write_color;
 pub mod hittable;
 use camera::Camera;
 use definitions::Color3;
+use interval::Interval;
 use nalgebra::Vector3;
 use ppm::{Image, Pixel};
 use ray::Ray;
@@ -13,7 +15,7 @@ use std::{f64::INFINITY, io};
 use hittable::{HittableList, Sphere};
 
 fn color_ray(r: &Ray<f64>, hittables: &HittableList) -> Color3<f64> {
-    let hit = hittables.hit(r, 0.0, INFINITY);
+    let hit = hittables.hit(r, Interval::new(0.0, INFINITY));
     if let Some(hr) = hit {
         // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
         return hr.normal.add_scalar(1.0).scale(0.5);
