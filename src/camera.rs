@@ -1,16 +1,20 @@
 use std::{f64::INFINITY, io};
-
 use nalgebra::Vector3;
-
-use crate::{definitions::Color3, hittable::{HittableList, Sphere}, interval::Interval, ppm::{self, Image, Pixel}, ray::Ray};
+use crate::{
+    definitions::Color3,
+    hittable::HittableList,
+    interval::Interval,
+    ppm::{self, Image, Pixel},
+    ray::Ray,
+};
 
 pub struct Camera {
     image_width: usize,
     image_height: usize,
-    aspect_ratio: f64,
+    // aspect_ratio: f64,
     focal_length: f64,
-    viewport_height: f64,
-    viewport_width: f64,
+    // viewport_height: f64,
+    // viewport_width: f64,
     viewport_u: Vector3<f64>,
     viewport_v: Vector3<f64>,
     camera_center: Vector3<f64>,
@@ -35,10 +39,10 @@ impl Camera {
         Self {
             image_width,
             image_height,
-            aspect_ratio,
+            // aspect_ratio,
             focal_length,
-            viewport_height,
-            viewport_width,
+            // viewport_height,
+            // viewport_width,
             viewport_u,
             viewport_v,
             camera_center,
@@ -74,13 +78,13 @@ impl Camera {
 
         let pixel00_loc = self.get_pixel00_loc();
 
-
         for j in 0..self.image_height {
             eprintln!("scanlines remaining: {}\n", self.image_height - j);
             let mut row = Vec::new();
             for i in 0..self.image_width {
-                let pixel_center =
-                    pixel00_loc + self.pixel_delta_u.scale(i as f64) + self.pixel_delta_v.scale(j as f64);
+                let pixel_center = pixel00_loc
+                    + self.pixel_delta_u.scale(i as f64)
+                    + self.pixel_delta_v.scale(j as f64);
                 let ray_dir = pixel_center - self.camera_center;
                 let ray = Ray::new(self.camera_center, ray_dir);
                 let color = color_ray(&ray, &hittables);
@@ -94,7 +98,6 @@ impl Camera {
         let image = Image::new(self.image_height, self.image_width, max, image);
         image.write_ppm(&mut stdout);
     }
-
 }
 fn color_ray(r: &Ray<f64>, hittables: &HittableList) -> Color3<f64> {
     let hit = hittables.hit(r, Interval::new(0.0, INFINITY));
