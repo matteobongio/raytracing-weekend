@@ -50,18 +50,6 @@ impl Camera {
             pixel_delta_v,
         }
     }
-    // pub fn get_pixel_delta_u(&self) -> &Vector3<f64> {
-    //     &self.pixel_delta_u
-    // }
-    // pub fn get_pixel_delta_v(&self) -> &Vector3<f64> {
-    //     &self.pixel_delta_v
-    // }
-    // pub fn get_image_height(&self) -> usize {
-    //     self.image_height
-    // }
-    // pub fn get_image_width(&self) -> usize {
-    //     self.image_width
-    // }
     pub fn get_viewport_upper_left(&self) -> Vector3<f64> {
         self.camera_center
             - Vector3::new(0.0, 0.0, self.focal_length)

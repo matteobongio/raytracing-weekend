@@ -22,12 +22,15 @@ fn main() {
     hittables
         .0
         .push(Box::new(Sphere::new(Vector3::new(0.0, 0.0, -1.0), 0.5)));
+    // hittables
+    //     .0
+    //     .push(Box::new(Sphere::new(Vector3::new(1.0, 0.0, -1.0), 0.5)));
     hittables
         .0
-        .push(Box::new(Sphere::new(Vector3::new(1.0, 0.0, -1.0), 0.5)));
+        .push(Box::new(Sphere::new(Vector3::new(0.0, 0.0, -150_000_000_000_000.0), 695_508_000.0)));
     hittables.0.push(Box::new(Sphere::new(
-        Vector3::new(0.0, -100.5, -1.0),
-        100.0,
+        Vector3::new(0.0, -1000.5, -1.0),
+        1000.0,
     )));
     camera.render(&hittables);
 }
