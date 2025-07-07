@@ -1,5 +1,3 @@
-use std::{f64::INFINITY, io};
-use nalgebra::Vector3;
 use crate::{
     definitions::Color3,
     hittable::HittableList,
@@ -7,6 +5,9 @@ use crate::{
     ppm::{self, Image, Pixel},
     ray::Ray,
 };
+use nalgebra::Vector3;
+use rand::random_range ;
+use std::{f64::INFINITY, io};
 
 pub struct Camera {
     image_width: usize,
@@ -20,6 +21,7 @@ pub struct Camera {
     camera_center: Vector3<f64>,
     pixel_delta_u: Vector3<f64>,
     pixel_delta_v: Vector3<f64>,
+    samples_per_pixel: usize,
 }
 
 impl Camera {
@@ -29,6 +31,7 @@ impl Camera {
         focal_length: f64,
         viewport_height: f64,
         camera_center: Vector3<f64>,
+        samples_per_pixel: usize,
     ) -> Self {
         let aspect_ratio = (image_width as f64) / (image_height as f64);
         let viewport_width = viewport_height * (aspect_ratio);
@@ -48,6 +51,7 @@ impl Camera {
             camera_center,
             pixel_delta_u,
             pixel_delta_v,
+            samples_per_pixel,
         }
     }
     pub fn get_viewport_upper_left(&self) -> Vector3<f64> {
@@ -60,23 +64,25 @@ impl Camera {
         self.get_viewport_upper_left() + 0.5 * (self.pixel_delta_u + self.pixel_delta_v)
     }
 
+    fn get_pixel_samples_scale(&self) -> f64 {
+        1.0 / (self.samples_per_pixel as f64)
+    }
+
     pub fn render(&self, hittables: &HittableList) {
         let max = 255;
         let mut image: Vec<Vec<ppm::Pixel<u8>>> = Vec::new();
-
-        let pixel00_loc = self.get_pixel00_loc();
+        let pixel_samples_scale = self.get_pixel_samples_scale();
 
         for j in 0..self.image_height {
             eprintln!("scanlines remaining: {}\n", self.image_height - j);
             let mut row = Vec::new();
             for i in 0..self.image_width {
-                let pixel_center = pixel00_loc
-                    + self.pixel_delta_u.scale(i as f64)
-                    + self.pixel_delta_v.scale(j as f64);
-                let ray_dir = pixel_center - self.camera_center;
-                let ray = Ray::new(self.camera_center, ray_dir);
-                let color = color_ray(&ray, &hittables);
-                row.push(Pixel::from(color));
+                let mut pixel_color = Color3::new(0.0, 0.0, 0.0);
+                for sample in 0..self.samples_per_pixel {
+                    let ray = self.get_ray(i, j);
+                    pixel_color += color_ray(&ray, hittables);
+                }
+                row.push(Pixel::from(pixel_color * pixel_samples_scale));
             }
             image.push(row);
         }
@@ -86,7 +92,26 @@ impl Camera {
         let image = Image::new(self.image_height, self.image_width, max, image);
         image.write_ppm(&mut stdout);
     }
+
+    fn get_ray(&self, i: usize, j: usize) -> Ray<f64> {
+        let offset = self.sample_square();
+        let pixel_sample = self.get_pixel00_loc()
+            + ((i as f64 + offset.x) * self.pixel_delta_u)
+            + ((j as f64 + offset.y) * self.pixel_delta_v);
+        let ray_origin = self.camera_center;
+        let ray_dir = pixel_sample - ray_origin;
+        return Ray::new(ray_origin, ray_dir);
+    }
+
+    fn sample_square(&self) -> Vector3<f64> {
+        return Vector3::new(
+            random_range(0.0 as f64..=0.99999) - 0.5,
+            random_range(0.0 as f64..=0.99999) - 0.5,
+            0.0,
+        );
+    }
 }
+
 fn color_ray(r: &Ray<f64>, hittables: &HittableList) -> Color3<f64> {
     let hit = hittables.hit(r, Interval::new(0.0, INFINITY));
     if let Some(hr) = hit {

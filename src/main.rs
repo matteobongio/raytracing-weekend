@@ -17,7 +17,7 @@ fn main() {
     let image_width = 900;
     let image_height = 400;
     let camera_center = Vector3::new(0.0, 0.0, 0.0);
-    let camera = Camera::new(image_width, image_height, 1.0, 2.0, camera_center);
+    let camera = Camera::new(image_width, image_height, 1.0, 2.0, camera_center, 10);
     let mut hittables = HittableList::new();
     hittables
         .0
