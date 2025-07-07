@@ -1,5 +1,5 @@
 use crate::{
-    definitions::Color3,
+    definitions::{random_on_hemisphere, Color3},
     hittable::HittableList,
     interval::Interval,
     ppm::{self, Image, Pixel},
@@ -22,6 +22,7 @@ pub struct Camera {
     pixel_delta_u: Vector3<f64>,
     pixel_delta_v: Vector3<f64>,
     samples_per_pixel: usize,
+    max_depth: usize,
 }
 
 impl Camera {
@@ -32,6 +33,7 @@ impl Camera {
         viewport_height: f64,
         camera_center: Vector3<f64>,
         samples_per_pixel: usize,
+        max_depth: usize,
     ) -> Self {
         let aspect_ratio = (image_width as f64) / (image_height as f64);
         let viewport_width = viewport_height * (aspect_ratio);
@@ -52,6 +54,7 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             samples_per_pixel,
+            max_depth,
         }
     }
     pub fn get_viewport_upper_left(&self) -> Vector3<f64> {
@@ -80,7 +83,7 @@ impl Camera {
                 let mut pixel_color = Color3::new(0.0, 0.0, 0.0);
                 for sample in 0..self.samples_per_pixel {
                     let ray = self.get_ray(i, j);
-                    pixel_color += color_ray(&ray, hittables);
+                    pixel_color += color_ray(&ray, self.max_depth, hittables);
                 }
                 row.push(Pixel::from(pixel_color * pixel_samples_scale));
             }
@@ -112,11 +115,17 @@ impl Camera {
     }
 }
 
-fn color_ray(r: &Ray<f64>, hittables: &HittableList) -> Color3<f64> {
+fn color_ray(r: &Ray<f64>, depth: usize, hittables: &HittableList) -> Color3<f64> {
+    if depth <= 0 {
+        return Color3::new(0.0, 0.0, 0.0);
+    }
     let hit = hittables.hit(r, Interval::new(0.0, INFINITY));
     if let Some(hr) = hit {
-        // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
-        return hr.normal.add_scalar(1.0).scale(0.5);
+        // // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
+        // return hr.normal.add_scalar(1.0).scale(0.5);
+        let direction = random_on_hemisphere(hr.normal);
+        let outgoing = Ray::new(hr.point, direction);
+        return 0.5 * color_ray(&outgoing, depth - 1, hittables);
     }
     let unit_direction = r.direction().normalize();
     let a = 0.5 * (unit_direction.y + 1.0);
