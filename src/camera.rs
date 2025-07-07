@@ -119,7 +119,7 @@ fn color_ray(r: &Ray<f64>, depth: usize, hittables: &HittableList) -> Color3<f64
     if depth <= 0 {
         return Color3::new(0.0, 0.0, 0.0);
     }
-    let hit = hittables.hit(r, Interval::new(0.0, INFINITY));
+    let hit = hittables.hit(r, Interval::new(0.001, INFINITY));
     if let Some(hr) = hit {
         // // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
         // return hr.normal.add_scalar(1.0).scale(0.5);
