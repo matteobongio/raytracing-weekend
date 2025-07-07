@@ -1,5 +1,5 @@
-use crate::definitions::Color3;
 use crate::write_color::WriteColor;
+use crate::{definitions::Color3, interval::Interval};
 use std::{fmt::Display, io::Write};
 
 pub struct Pixel<T: Display> {
@@ -8,9 +8,34 @@ pub struct Pixel<T: Display> {
     blue: T,
 }
 
-impl<W: Write, T: Display> WriteColor<W> for &Pixel<T> {
+pub trait ToU8 {
+    fn to_u8(&self) -> u8;
+}
+
+impl ToU8 for u8 {
+    fn to_u8(&self) -> u8 {
+        *self
+    }
+}
+
+impl ToU8 for f64 {
+    fn to_u8(&self) -> u8 {
+        let intensity = Interval::new(0.0, 0.99999);
+        (256.0 * intensity.clamp(*self)) as u8
+    }
+}
+
+impl<W: Write, T: Display + ToU8> WriteColor<W> for &Pixel<T> {
     fn write_color(&self, writer: &mut W) -> std::io::Result<()> {
-        let output = format!("{} {} {}\n", self.red, self.green, self.blue);
+        let r = &self.red;
+        let g = &self.green;
+        let b = &self.blue;
+
+        let red_byte = r.to_u8();
+        let green_byte = g.to_u8();
+        let blue_byte = b.to_u8();
+
+        let output = format!("{} {} {}\n", red_byte, green_byte, blue_byte);
         writer.write_all(output.as_bytes())
     }
 }
@@ -38,7 +63,7 @@ pub struct Image<T: Display> {
     data: Vec<Vec<Pixel<T>>>,
 }
 
-impl<T: Display> Image<T> {
+impl<T: Display + ToU8> Image<T> {
     pub fn new(
         image_height: usize,
         image_width: usize,
