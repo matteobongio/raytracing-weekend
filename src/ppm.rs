@@ -20,8 +20,15 @@ impl ToU8 for u8 {
 
 impl ToU8 for f64 {
     fn to_u8(&self) -> u8 {
+        let mut color = *self;
+        //linear to gamma
+        if color > 0.0 {
+            color = color.sqrt();
+        } else {
+            color = 0.0;
+        }
         let intensity = Interval::new(0.0, 0.99999);
-        (256.0 * intensity.clamp(*self)) as u8
+        (256.0 * intensity.clamp(color)) as u8
     }
 }
 
