@@ -1,5 +1,5 @@
 use crate::{
-    definitions::{random_on_hemisphere, Color3},
+    definitions::{random_on_hemisphere, random_unit_vec, Color3},
     hittable::HittableList,
     interval::Interval,
     ppm::{self, Image, Pixel},
@@ -123,7 +123,7 @@ fn color_ray(r: &Ray<f64>, depth: usize, hittables: &HittableList) -> Color3<f64
     if let Some(hr) = hit {
         // // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
         // return hr.normal.add_scalar(1.0).scale(0.5);
-        let direction = random_on_hemisphere(hr.normal);
+        let direction = hr.normal + random_unit_vec();
         let outgoing = Ray::new(hr.point, direction);
         return 0.5 * color_ray(&outgoing, depth - 1, hittables);
     }
