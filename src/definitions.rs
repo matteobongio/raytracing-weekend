@@ -1,4 +1,4 @@
-use nalgebra::Vector3;
+use nalgebra::{ComplexField, Vector3};
 use rand::{
     distr::uniform::{SampleRange, SampleUniform},
     random_range,
@@ -36,8 +36,15 @@ pub fn is_near_zero(vec: Vector3<f64>) -> bool {
     vec[0].abs() < s && vec[1].abs() < s && vec[2].abs() < s
 }
 
-pub fn reflect(incoming: &Vector3<f64>, normal: &Vector3<f64>) -> Vector3<f64>{
+pub fn reflect(incoming: &Vector3<f64>, normal: &Vector3<f64>) -> Vector3<f64> {
     return incoming - (2.0 * incoming.dot(normal) * normal);
+}
+
+pub fn refract(uv: &Vector3<f64>, normal: &Vector3<f64>, etai_over_etat: f64) -> Vector3<f64> {
+    let cos_theta: f64 = (-uv).dot(normal).min(1.0);
+    let r_out_perpendicular: Vector3<f64> = etai_over_etat * (uv + cos_theta * normal);
+    let r_out_parallel = -((1.0 - r_out_perpendicular.magnitude_squared()).abs().sqrt() * normal);
+    return r_out_parallel + r_out_perpendicular;
 }
 
 pub fn scale_vecs(u: &Vector3<f64>, v: &Vector3<f64>) -> Vector3<f64> {
