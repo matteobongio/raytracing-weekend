@@ -1,12 +1,12 @@
 use crate::{
-    definitions::{random_on_hemisphere, random_unit_vec, Color3},
+    definitions::{Color3, random_on_hemisphere, random_unit_vec, scale_vecs},
     hittable::HittableList,
     interval::Interval,
     ppm::{self, Image, Pixel},
     ray::Ray,
 };
 use nalgebra::Vector3;
-use rand::random_range ;
+use rand::random_range;
 use std::{f64::INFINITY, io};
 
 pub struct Camera {
@@ -123,9 +123,12 @@ fn color_ray(r: &Ray<f64>, depth: usize, hittables: &HittableList) -> Color3<f64
     if let Some(hr) = hit {
         // // let normal = (r.at(hr.t) - Vector3::new(0.0, 0.0, -1.0)).normalize();
         // return hr.normal.add_scalar(1.0).scale(0.5);
-        let direction = hr.normal + random_unit_vec();
-        let outgoing = Ray::new(hr.point, direction);
-        return 0.5 * color_ray(&outgoing, depth - 1, hittables);
+        if let Some((scattered, attenuation)) =
+            hr.material.scatter(r, &hr, Color3::new(0.0, 0.0, 0.0))
+        {
+            return scale_vecs(&attenuation, &color_ray(&scattered, depth - 1, hittables));
+        }
+        return Color3::new(0.0, 0.0, 0.0);
     }
     let unit_direction = r.direction().normalize();
     let a = 0.5 * (unit_direction.y + 1.0);

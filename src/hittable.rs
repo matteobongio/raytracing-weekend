@@ -1,5 +1,8 @@
-use crate::interval::Interval;
+use std::rc::Rc;
+
+use crate::material::Material;
 use crate::ray::Ray;
+use crate::{interval::Interval, material};
 use nalgebra::Vector3;
 
 pub struct HitRecord {
@@ -7,16 +10,24 @@ pub struct HitRecord {
     pub normal: Vector3<f64>,
     pub t: f64,
     pub front_face: bool,
+    pub material: Rc<dyn material::Material>,
 }
 
 impl HitRecord {
-    pub fn new(point: Vector3<f64>, outward_normal: Vector3<f64>, t: f64, ray: &Ray<f64>) -> Self {
+    pub fn new(
+        point: Vector3<f64>,
+        outward_normal: Vector3<f64>,
+        t: f64,
+        ray: &Ray<f64>,
+        material: Rc<dyn material::Material>,
+    ) -> Self {
         let (front_face, normal) = Self::set_face_normal(&ray, &outward_normal);
         Self {
             point,
             normal,
             t,
             front_face,
+            material,
         }
     }
     fn set_face_normal(ray: &Ray<f64>, outward_normal: &Vector3<f64>) -> (bool, Vector3<f64>) {
@@ -62,13 +73,15 @@ impl HittableList {
 pub struct Sphere {
     center: Vector3<f64>,
     radius: f64,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vector3<f64>, radius: f64) -> Self {
+    pub fn new(center: Vector3<f64>, radius: f64, material: Rc<dyn Material>) -> Self {
         Self {
             center,
             radius: radius.max(0.0),
+            material,
         }
     }
 }
@@ -95,7 +108,7 @@ impl Hittable for Sphere {
         let t = root;
         let point = ray.at(t);
         let normal = (point - self.center) / self.radius;
-        let hr = HitRecord::new(point, normal, t, ray);
+        let hr = HitRecord::new(point, normal, t, ray, self.material.clone());
         Some(hr)
     }
 }
